@@ -21,6 +21,8 @@
 	<property name="suffix" value=".jsp"/>
 </bean>
 
+<!-- <mvc:resources mapping="/**" location="/" /> -->
+
 <!-- http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html -->
 <context:property-placeholder location="META-INF/config.properties"/>
 

@@ -9,7 +9,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>Insert title here</title>
-<meta HTTP-EQUIV="REFRESH" content="0; url=app/intro" />
+<!-- <meta HTTP-EQUIV="REFRESH" content="0; url=app/intro" /> -->
 </head>
 <body>
 
