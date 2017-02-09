@@ -1,18 +1,13 @@
 package net.fenyo.xbee.web;
 
-import java.io.IOException;
-
-import javax.servlet.ServletContext;
-
+import java.io.*;
+import javax.servlet.*;
 import net.fenyo.xbee.serial.*;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.ModelAndView;
+import org.apache.commons.logging.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.stereotype.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.*;
 
 // excellente doc sur les controller : "16.3 Implementing Controllers" de spring-framework-reference.pdf
 @Controller("webController")

@@ -1,11 +1,8 @@
 package net.fenyo.xbee.serial;
 
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.net.*;
+import java.util.*;
+import org.apache.commons.logging.*;
 
 public abstract class ThreadHandler implements Runnable {
     protected final Log log = LogFactory.getLog(getClass());

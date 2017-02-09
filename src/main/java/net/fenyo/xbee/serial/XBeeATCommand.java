@@ -1,7 +1,6 @@
 package net.fenyo.xbee.serial;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
+import java.io.*;
 
 public class XBeeATCommand extends XBeeData {
     private final String command;

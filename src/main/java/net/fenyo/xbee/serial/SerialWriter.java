@@ -1,12 +1,6 @@
 package net.fenyo.xbee.serial;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.ArrayUtils;
+import java.io.*;
 
 public class SerialWriter extends ThreadHandler {
     private OutputStream stream;

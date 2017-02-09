@@ -1,22 +1,11 @@
 package net.fenyo.xbee.serial;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Component;
+import java.io.*;
+import java.net.*;
+import org.apache.commons.lang3.*;
+import org.apache.commons.logging.*;
+import org.springframework.beans.factory.*;
+import org.springframework.stereotype.*;
 
 // CT, GT et CC doivent avoir les valeurs par défaut
 
@@ -686,7 +675,6 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                             log.warn("cannot reset XBee module");
                                             should_reconnect = true;
                                         }
-
                                     }
                                 }
                             }
@@ -694,21 +682,21 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                 log.info("API mode is correct");
 
                                 byte[] bytes = sendATCommandFrameSingleQuery("ID");
-                                if (bytes == null || !bytesArrayToString(bytes).equals("afaf")) {
+                                if (bytes == null || !bytesArrayToString(bytes).equals("afae")) {
                                     if (bytes == null)
-                                        log.warn("bad pan id null (should be afaf)");
+                                        log.warn("bad pan id null (should be afae)");
                                     else
-                                        log.warn("bad pan id " + bytesArrayToString(bytes) + "(should be afaf)");
+                                        log.warn("bad pan id " + bytesArrayToString(bytes) + "(should be afae)");
 
                                     log.info("trying to set pan id to afafh");
                                     bytes = sendATCommandFrameSingleQuery(
-                                            "ID" + new String(new byte[] { (byte) 0xaf, (byte) 0xaf }));
+                                            "ID" + new String(new byte[] { (byte) 0xaf, (byte) 0xae }));
                                     if (bytes == null || bytes.length > 0) {
                                         log.warn("error");
                                         should_reconnect = true;
                                         continue;
                                     }
-                                    log.debug("pan id set to AFAFh");
+                                    log.debug("pan id set to AFAEh");
                                 }
 
                                 bytes = sendATCommandFrameSingleQuery("CE");

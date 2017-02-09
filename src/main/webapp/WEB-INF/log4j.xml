@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="ISO-8859-15" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE log4j:configuration SYSTEM "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
-
-<!-- build/src/jakarta-log4j-1.2.8/src/java/org/apache/log4j/xml/examples -->
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 
@@ -31,7 +29,7 @@
         <priority value="trace" />
 
         <!-- avec cet appender-ref, on a 2 fois les messages pour net.fenyo, 
-            s'il y a aussi le même consoleAppender pour net.fenyo -->
+            s'il y a aussi le mÃªme consoleAppender pour net.fenyo -->
         <!-- <appender-ref ref="consoleAppender"/> -->
     </root>
 

@@ -1,11 +1,8 @@
 package net.fenyo.xbee.serial;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.commons.lang3.ArrayUtils;
+import java.io.*;
+import java.util.*;
+import org.apache.commons.lang3.*;
 
 public class XBeeFrame extends XBeeData {
     final int api_id;

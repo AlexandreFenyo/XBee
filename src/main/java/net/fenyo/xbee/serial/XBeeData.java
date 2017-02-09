@@ -1,9 +1,7 @@
 package net.fenyo.xbee.serial;
 
-import java.io.UnsupportedEncodingException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.*;
+import org.apache.commons.logging.*;
 
 public abstract class XBeeData {
     protected final Log log = LogFactory.getLog(getClass());
