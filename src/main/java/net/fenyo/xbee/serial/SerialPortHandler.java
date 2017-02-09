@@ -15,7 +15,6 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
 
     private final Object connection_lock = new Object();
     private final Object at_mode_lock = new Object();
-    private final Object IR_transaction_lock = new Object();
 
     private Thread thread = null;
 
@@ -137,188 +136,7 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
     }
 
     // threads: tomcat
-    public String checkAT2() throws IOException, InterruptedException {
-        return bytesArrayToString(sendATCommandFrameSingleQuery("SH"));
-    }
-
-    // threads: tomcat
-    public String checkAT3() throws IOException, InterruptedException {
-        return "low power node: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7AA8, "SL"))
-                + "\r" + "IR node: "
-                + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409f5784, "SL")) + "\r"
-                + "server node: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409F5655, "SL"))
-                + "\r" + "volets node: "
-                + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409A960C, "SL"));
-    }
-
-    // threads: tomcat
-    public String checkAT4() throws IOException, InterruptedException {
-        return "result: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409A960C, "D0")) + "\r";
-    }
-
-    // threads: tomcat
-    public String checkAT5() throws IOException, InterruptedException {
-        return "result: " + bytesArrayToString(
-                sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "D4" + new String(new byte[] { 0x04 })))
-                + "\r";
-    }
-
-    // threads: tomcat
-    public String checkAT6() throws IOException, InterruptedException {
-        return "result: " + bytesArrayToString(
-                sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "D4" + new String(new byte[] { 0x05 })))
-                + "\r";
-    }
-
-    // threads: tomcat
-    public String checkAT7() throws IOException, InterruptedException {
-        sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "IS");
-
-        return "ATD0: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "D0")) + "\r"
-                + "ATD1: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "D1")) + "\r"
-                + "ATD2: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "D2")) + "\r"
-                + "ATD3: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "D3")) + "\r"
-                + "ATD8: " + bytesArrayToString(sendRemoteATCommandFrameSingleQuery(0x13a200, 0x409B7A9C, "D8")) + "\r";
-    }
-
-    // threads: tomcat
-    // synchronized: IR_transaction_lock
-    private boolean waitForChar(final char c, final long timeout)
-            throws UnsupportedEncodingException, InterruptedException {
-        final long now = System.currentTimeMillis();
-        while (now + timeout > System.currentTimeMillis()) {
-            final long delay = now + timeout - System.currentTimeMillis();
-            final XBeeFrame frame = serial_reader.getFrameWithAddress("0013a200409f5784", delay > 0 ? delay : 0);
-            if (frame != null && frame.getReceivedData().indexOf(c) != -1)
-                return true;
-        }
-        log.warn("timeout after " + timeout + "ms waiting for " + c);
-        return false;
-    }
-
-    // threads: tomcat
-    public boolean sendFile(final String filename, final int count) throws IOException, InterruptedException {
-        synchronized (IR_transaction_lock) {
-            boolean errsent = false;
-            log.debug("sending file " + filename + " " + count + " times");
-
-            log.debug("erasing memory");
-            boolean done = false;
-            for (int retries = 0; retries < 10; retries++) { // 10 retries
-                if (retries > 0)
-                    log.warn("retrying nb: " + retries);
-                while (serial_reader.getFrameWithAddress("0013a200409f5784", 0) != null)
-                    ; // flush previous chars from IR device
-                errsent = sendDataFrame(0x13a200, 0x409f5784, "D");
-                if ((done = waitForChar('>', 5000)) == true && errsent == true)
-                    break;
-                else
-                    waitForChar('<', 5000);
-            }
-            if (!done) {
-                log.error("cannot erase memory");
-                return false;
-            }
-
-            log.debug("saving IR code");
-            final BufferedReader br = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(new File(filename)), "ISO-8859-1"));
-            try {
-                String line;
-                String msg = "";
-                int cpt = 0;
-                do {
-                    log.debug("saving at pos " + cpt);
-                    line = br.readLine();
-                    if (line != null || msg.length() > 0) {
-                        if (line != null) {
-                            msg += "S";
-                            msg += (char) (0xff & cpt);
-                            msg += (char) (0xff & (new Integer(line).intValue() >> 8));
-                            msg += (char) (0xff & new Integer(line).intValue());
-                        }
-
-                        if (line == null
-                                || msg.length() >= /* 4 pour envoyer 1 à 1 */ 80) {
-                            done = false;
-                            for (int retries = 0; retries < 10; retries++) { // 10
-                                                                             // retries
-                                if (retries > 0)
-                                    log.warn("retrying nb: " + retries);
-                                while (serial_reader.getFrameWithAddress("0013a200409f5784", 0) != null)
-                                    ; // flush previous chars from IR device
-                                errsent = sendDataFrame(0x13a200, 0x409f5784, msg);
-                                if ((done = waitForChar('>', 5000)) == true && errsent == true)
-                                    break;
-                                else
-                                    waitForChar('<', 5000);
-                            }
-                            if (!done) {
-                                log.error("cannot save IR code");
-                                return false;
-                            }
-                            msg = "";
-                        }
-
-                    }
-
-                    cpt++;
-                } while (line != null);
-
-            } finally {
-                br.close();
-            }
-
-            for (int nsend = 0; nsend < count; nsend++) {
-                if (nsend != 0) {
-                    log.debug("clearing pulse counter");
-                    done = false;
-                    for (int retries = 0; retries < 10; retries++) { // 10
-                                                                     // retries
-                        if (retries > 0)
-                            log.warn("retrying nb: " + retries);
-                        while (serial_reader.getFrameWithAddress("0013a200409f5784", 0) != null)
-                            ; // flush previous chars from IR device
-                        errsent = sendDataFrame(0x13a200, 0x409f5784, "P");
-                        if ((done = waitForChar('>', 5000)) == true && errsent == true)
-                            break;
-                        else
-                            waitForChar('<', 5000);
-                    }
-                    if (!done) {
-                        log.error("cannot clear pulse counter");
-                        return false;
-                    }
-                    // wait between two IR command sent
-                    Thread.sleep(100);
-                }
-
-                log.debug("sending IR command");
-                done = false;
-                for (int retries = 0; retries < 10; retries++) { // 10 retries
-                    if (retries > 0)
-                        log.warn("retrying nb: " + retries);
-                    while (serial_reader.getFrameWithAddress("0013a200409f5784", 0) != null)
-                        ; // flush previous chars from IR device
-                    errsent = sendDataFrame(0x13a200, 0x409f5784, "I");
-                    if ((done = waitForChar('>', 5000)) == true && errsent == true)
-                        break;
-                    else
-                        waitForChar('<', 5000);
-                }
-                if (!done) {
-                    log.error("cannot send IR command");
-                    return false;
-                }
-            }
-
-            return true;
-        }
-    }
-
-    // threads: tomcat
-    // synchronized: IR_transaction_lock si destinataire est le module IR
-    public boolean sendDataFrame(final long address_high, final long address_low, final String msg)
+    private boolean sendDataFrame(final long address_high, final long address_low, final String msg)
             throws IOException, InterruptedException {
         if (msg.getBytes("ISO8859-1").length == 0) {
             log.error("invalid data length");
@@ -390,7 +208,7 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
     }
 
     // threads: tomcat
-    public byte[] sendATCommandFrameSingleQuery(final String command) throws IOException, InterruptedException {
+    private byte[] sendATCommandFrameSingleQuery(final String command) throws IOException, InterruptedException {
         if (command.getBytes("ISO8859-1").length < 2) {
             log.error("invalid command length");
             return null;
@@ -501,7 +319,7 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
             // thus, serial_reader can be null => an exception can be thrown
             // here (and must be catch at a higher level)
             // en fait, au lieu de 15000, faudrait mettre 25000 car le timeout
-            // est égale à 2,5 fois SP (à vérifier), quoi que c'est aussi 3
+            // est égal à 2,5 fois SP (à vérifier), quoi que c'est aussi 3
             // essais séparés de 200 ms => bi
             final XBeeFrame retframe = serial_reader.getFrameWithId(frame_id, 15000); // 15000
                                                                                       // since
@@ -553,18 +371,18 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
     }
 
     // threads: tomcat
-    public String sendATCommand(final String command) throws IOException, InterruptedException {
+    private String sendATCommand(final String command) throws IOException, InterruptedException {
         return sendATCommand(command, "\r");
     }
 
     // threads: tomcat
-    public String sendATCommand(final String command, final String end_of_data)
+    private String sendATCommand(final String command, final String end_of_data)
             throws IOException, InterruptedException {
         return sendATCommand(command, end_of_data, false);
     }
 
-    // threads: tomcat, SerialPoirtHandler
-    // Synchronized: connection_lock ou rien selon l'appel
+    // threads: tomcat, SerialPortHandler
+    // synchronized: connection_lock or nothing
     public String sendATCommand(final String command, final String end_of_data, final boolean ignore_atcn)
             throws IOException, InterruptedException {
         synchronized (connection_lock) {
@@ -927,48 +745,6 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
 
                 if (should_reconnect == false) {
 
-                    // send beacon to let IR module awake
-                    try {
-                        synchronized (IR_transaction_lock) {
-                            // flush previous chars from IR and other devices to
-                            // avoid useless frames stored in
-                            // SerialReader.frames
-                            synchronized (connection_lock) {
-                                while (serial_reader != null
-                                        && serial_reader.getFrameWithAddress("0013a200409f5784", 0) != null)
-                                    ;
-                                if (serial_reader != null) {
-                                    XBeeFrame frame;
-                                    do {
-                                        frame = serial_reader.getFrameWithAddress("0013a200409b7a9c", 0);
-                                        if (frame != null) {
-                                            log.debug("FRAME recue du nouveau module");
-                                        }
-                                    } while (frame != null);
-                                }
-                            }
-                            // send useless char to module to let it being
-                            // wake-up
-                            log.debug("avant send X frame");
-                            // en mode cyclique (i.e. le mode dans lequel on
-                            // est) : les envois vers un module éteint attendent
-                            // 25 secondes (2.5 fois 10 secondes) avant de
-                            // partir en timeout par le module, qui l'annonce
-                            // avec une frame 98 contenant la valeur 3
-                            // dans le cas d'un module éteint, les autres envois
-                            // vers d'autres modules ne semblent pas partir du
-                            // module coordinateur
-                            sendDataFrame(0x13a200, 0x409f5784, "X");
-                            log.debug("après send X frame");
-
-                        }
-                        log.debug("avant send Y frame");
-                        // sendDataFrame(0x13a200, 0x409b7a9c, "Y");
-                        // module volets AF
-                        sendDataFrame(0x13a200, 0x409b7abb, "Z");
-                    } catch (final IOException ex) {
-                        log.warn(ex);
-                    }
 
                 }
 
