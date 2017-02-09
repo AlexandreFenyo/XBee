@@ -5,36 +5,34 @@
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 
-  <appender name="consoleAppender" class="org.apache.log4j.ConsoleAppender">
-    <layout class="org.apache.log4j.PatternLayout">
-<!-- for debugging -->
-      <param name="ConversionPattern" value="%d [%t] %p - %F:%L - %m%n"/>
-<!-- for fast debugging : no line number -->
-      <!-- <param name="ConversionPattern" value="%d [%t] %p - %F - %m%n"/> -->
-    </layout>
-  </appender>
+    <appender name="consoleAppender" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <!-- for debugging -->
+            <param name="ConversionPattern" value="%d [%t] %p - %F:%L - %m%n" />
+            <!-- for fast debugging : no line number -->
+            <!-- <param name="ConversionPattern" value="%d [%t] %p - %F - 
+                %m%n"/> -->
+        </layout>
+    </appender>
 
-<!-- 
-<category name="org.springframework.scheduling">
-    <priority value="debug"/>
-    <appender-ref ref="consoleAppender"/>
-</category>
- -->
- 
-<category name="net.fenyo">
-    <priority value="debug"/>
-    <appender-ref ref="consoleAppender"/>
-</category>
+    <!-- <category name="org.springframework.scheduling"> <priority value="debug"/> 
+        <appender-ref ref="consoleAppender"/> </category> -->
 
-  <root>
-    <!-- <priority value="trace"/> -->
-	<!-- <priority value="debug"/> -->
-	<!-- <priority value="error"/> -->
+    <category name="net.fenyo">
+        <priority value="debug" />
+        <appender-ref ref="consoleAppender" />
+    </category>
 
-     <priority value="trace"/>
+    <root>
+        <!-- <priority value="trace"/> -->
+        <!-- <priority value="debug"/> -->
+        <!-- <priority value="error"/> -->
 
-<!-- avec cet appender-ref, on a 2 fois les messages pour net.fenyo, s'il y a aussi le même consoleAppender pour net.fenyo -->
-<!-- <appender-ref ref="consoleAppender"/> -->
-  </root>
+        <priority value="trace" />
+
+        <!-- avec cet appender-ref, on a 2 fois les messages pour net.fenyo, 
+            s'il y a aussi le même consoleAppender pour net.fenyo -->
+        <!-- <appender-ref ref="consoleAppender"/> -->
+    </root>
 
 </log4j:configuration>

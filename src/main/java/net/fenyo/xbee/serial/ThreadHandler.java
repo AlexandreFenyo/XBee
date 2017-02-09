@@ -8,39 +8,39 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public abstract class ThreadHandler implements Runnable {
-	protected final Log log = LogFactory.getLog(getClass());
+    protected final Log log = LogFactory.getLog(getClass());
 
-	protected final List<XBeeData> data = new ArrayList<XBeeData>();
+    protected final List<XBeeData> data = new ArrayList<XBeeData>();
 
-	private Socket socket = null;
-	private Thread thread = null;
-	private boolean error = false;
+    private Socket socket = null;
+    private Thread thread = null;
+    private boolean error = false;
 
-	public boolean getError() {
-		return error;
-	}
+    public boolean getError() {
+        return error;
+    }
 
-	protected void errorOccured() {
-		error = true;
-	}
+    protected void errorOccured() {
+        error = true;
+    }
 
-	protected Socket getSocket() {
-		return socket;
-	}
+    protected Socket getSocket() {
+        return socket;
+    }
 
-	public void start(final Socket socket) {
-		this.socket = socket;
-		thread = new Thread(this, getClass().toString());
-		thread.start();
-	}
-	
-	protected boolean isInterrupted() {
-		return thread.isInterrupted();
-	}
-	
-	public void close() throws InterruptedException {
-		errorOccured();
-		thread.interrupt();
-		thread.join();
-	}
+    public void start(final Socket socket) {
+        this.socket = socket;
+        thread = new Thread(this, getClass().toString());
+        thread.start();
+    }
+
+    protected boolean isInterrupted() {
+        return thread.isInterrupted();
+    }
+
+    public void close() throws InterruptedException {
+        errorOccured();
+        thread.interrupt();
+        thread.join();
+    }
 }

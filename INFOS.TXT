@@ -5,19 +5,16 @@ threads:
 
 locks:
   SerialPortHandler:
-    frame_id : prot�g� via connection_lock
-    connection_lock : prot�ge les modifs de socket, serial_reader, serial_writer et thread (le thread de SerialPortHandler)
+    frame_id : protégé via connection_lock
+    connection_lock : protège les modifs de socket, serial_reader, serial_writer et thread (le thread de SerialPortHandler)
     at_mode_lock
     IR_transaction_lock
 
-cha�nes :
+chaînes :
   connection_lock => at_mode_lock
   IR_transaction_lock => connection_lock => at_mode_lock
 
   /usr/local/bin/screen -d -m sh -c 'while true; do /usr/local/bin/socat -d /dev/ttyU4,ispeed=57600,ospeed=57600,echo=0,raw TCP-LISTEN:9000,reuseaddr; done'
-  
-  
-  
   
 Pour débugger :
 Sur virt :
@@ -29,7 +26,3 @@ stty raw; socat - tcp:virt:9000
 pour tester :
 virt: /home/fenyo/devel/scripts_IR
 echo send commands/final/tv_power.ir 1 | ./netcatx w7 9999
-
-
-
-  
