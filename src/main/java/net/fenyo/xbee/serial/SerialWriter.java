@@ -42,9 +42,9 @@ public class SerialWriter extends ThreadHandler {
                         Thread.sleep(xbee_data.waitBeforeWrite());
 
                     log.debug("write " + xbee_data.getRawContent().length + " bytes");
-                    for (int i = 0; i < xbee_data.getRawContent().length; i++)
-                        log.debug("write byte: " + Integer.toHexString(0xff & xbee_data.getRawContent()[i])
-                                + " - char='" + new String(new byte[] { xbee_data.getRawContent()[i] }, "ASCII") + "'");
+//                    for (int i = 0; i < xbee_data.getRawContent().length; i++)
+//                        log.debug("write byte: " + Integer.toHexString(0xff & xbee_data.getRawContent()[i])
+//                                + " - char='" + new String(new byte[] { xbee_data.getRawContent()[i] }, "ASCII") + "'");
 
                     stream.write(xbee_data.getRawContent());
                     if (xbee_data.waitAfterWrite() != 0)

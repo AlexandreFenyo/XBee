@@ -29,6 +29,7 @@
     <bean id="serialPortHandler" class="net.fenyo.xbee.serial.SerialPortHandler">
         <property name="serialServerHostName" value="${xbee.serialServerHostName}" />
         <property name="serialServerPortNumber" value="${xbee.serialServerPortNumber}" />
+        <property name="remoteCommandAddress" value="${xbee.remoteCommand.address}" />
     </bean>
 
 </beans>

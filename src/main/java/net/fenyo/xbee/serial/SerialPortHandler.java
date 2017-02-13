@@ -20,6 +20,7 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
 
     private String serialServerHostName;
     private int serialServerPortNumber;
+    private String remoteCommandAddress;
 
     private SerialReader serial_reader = null;
     private SerialWriter serial_writer = null;
@@ -61,6 +62,14 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
 
     public void setSerialServerPortNumber(int serialServerPortNumber) {
         this.serialServerPortNumber = serialServerPortNumber;
+    }
+
+    public String getRemoteCommandAddress() {
+        return remoteCommandAddress;
+    }
+
+    public void setRemoteCommandAddress(String remoteCommandAddress) {
+        this.remoteCommandAddress = remoteCommandAddress;
     }
 
     // threads: tomcat
@@ -462,9 +471,9 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                     synchronized (connection_lock) {
                         if (should_reconnect || serial_reader == null || serial_writer == null
                                 || serial_reader.getError() || serial_writer.getError()) {
-                            log.debug("avant connectSerial()");
+                            log.debug("avant connexion au coordinateur");
                             connectSerial();
-                            log.debug("après connectSerial()");
+                            log.debug("après connexion au coordinateur");
                             should_reconnect = false;
                             String value = sendATCommand("ATAP\r");
                             if (value == null || !value.equals(/* "1" */ "2")) {
@@ -561,6 +570,23 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                 }
                                 log.info("node id: " + new String(bytes, "ISO8859-1"));
 
+
+                                
+                                
+                                bytes = sendATCommandFrameSingleQuery("SM");
+                                if (bytes == null) {
+                                    log.warn("error");
+                                    should_reconnect = true;
+                                    continue;
+                                }
+                                final String module_sm = bytesArrayToString(bytes);
+                                
+                                log.info("module SM mode: " + module_sm);
+                                
+                                
+                                
+                                
+                                
                                 bytes = sendATCommandFrameSingleQuery("DH");
                                 if (bytes == null) {
                                     log.warn("error");
@@ -584,18 +610,18 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                     continue;
                                 }
                                 log.info("MY address: " + bytesArrayToString(bytes));
-                                if (!bytesArrayToString(bytes).equals("fffe")) {
-                                    log.warn("bad MY address (should be fffe)");
-                                    log.warn("trying to set MY address to fffe");
-                                    bytes = sendATCommandFrameSingleQuery(
-                                            "MY" + new String(new byte[] { (byte) 0xff, (byte) 0xfe }));
-                                    if (bytes == null || bytes.length > 0) {
-                                        log.warn("error");
-                                        should_reconnect = true;
-                                        continue;
-                                    }
-                                    log.warn("MY address set to fffe");
-                                }
+//                                if (!bytesArrayToString(bytes).equals("fffe")) {
+//                                    log.warn("bad MY address (should be fffe)");
+//                                    log.warn("trying to set MY address to fffe");
+//                                    bytes = sendATCommandFrameSingleQuery(
+//                                            "MY" + new String(new byte[] { (byte) 0xff, (byte) 0xfe }));
+//                                    if (bytes == null || bytes.length > 0) {
+//                                        log.warn("error");
+//                                        should_reconnect = true;
+//                                        continue;
+//                                    }
+//                                    log.warn("MY address set to fffe");
+//                                }
 
                                 bytes = sendATCommandFrameSingleQuery("MM");
                                 if (bytes == null) {
@@ -653,16 +679,16 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                     continue;
                                 }
                                 log.info("node discovery time: " + (0xff & bytes[0]) * 100 + " ms");
-                                if ((0xff & bytes[0]) * 100 != 5000) {
-                                    log.warn("trying to set node discovery time to 5 secs");
-                                    bytes = sendATCommandFrameSingleQuery("NT" + new String(new byte[] { 0x32 }));
-                                    if (bytes == null || bytes.length > 0) {
-                                        log.warn("error");
-                                        should_reconnect = true;
-                                        continue;
-                                    }
-                                    log.warn("node discovery time set to 5 secs");
-                                }
+//                                if ((0xff & bytes[0]) * 100 != 5000) {
+//                                    log.warn("trying to set node discovery time to 5 secs");
+//                                    bytes = sendATCommandFrameSingleQuery("NT" + new String(new byte[] { 0x32 }));
+//                                    if (bytes == null || bytes.length > 0) {
+//                                        log.warn("error");
+//                                        should_reconnect = true;
+//                                        continue;
+//                                    }
+//                                    log.warn("node discovery time set to 5 secs");
+//                                }
 
                                 bytes = sendATCommandFrameSingleQuery("NO");
                                 if (bytes == null) {
@@ -670,18 +696,18 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                     should_reconnect = true;
                                     continue;
                                 }
-                                if (!bytesArrayToString(bytes).equals("01")) {
-                                    log.warn("node discovery option: no self response");
-                                    log.warn("node discovery option: trying to activate self-response");
-                                    bytes = sendATCommandFrameSingleQuery("NO" + new String(new byte[] { 0x01 }));
-                                    if (bytes == null || bytes.length > 0) {
-                                        log.warn("error");
-                                        should_reconnect = true;
-                                        continue;
-                                    }
-                                    log.warn("node discovery option: self-response activated");
-                                } else
-                                    log.info("node discovery option: self response");
+//                                if (!bytesArrayToString(bytes).equals("01")) {
+//                                    log.warn("node discovery option: no self response");
+//                                    log.warn("node discovery option: trying to activate self-response");
+//                                    bytes = sendATCommandFrameSingleQuery("NO" + new String(new byte[] { 0x01 }));
+//                                    if (bytes == null || bytes.length > 0) {
+//                                        log.warn("error");
+//                                        should_reconnect = true;
+//                                        continue;
+//                                    }
+//                                    log.warn("node discovery option: self-response activated");
+//                                } else
+//                                    log.info("node discovery option: self response");
 
                                 bytes = sendATCommandFrameSingleQuery("SC");
                                 if (bytes == null) {
@@ -708,20 +734,20 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                 // activate this block)
                                 boolean manual = true;
                                 if (manual) {
-                                    log.debug("SP=" + bytesArrayToString(sendATCommandFrameSingleQuery("SP")) + "h");
-                                    bytes = sendATCommandFrameSingleQuery(
-                                            "SP" + new String(new byte[] { 3, (byte) 0xe8 }, "ISO8859-1"));
-                                    log.debug("SP=" + bytesArrayToString(sendATCommandFrameSingleQuery("SP")) + "h");
+//                                    log.info("SP=" + bytesArrayToString(sendATCommandFrameSingleQuery("SP")) + "h");
+//                                    bytes = sendATCommandFrameSingleQuery(
+//                                            "SP" + new String(new byte[] { 3, (byte) 0xe8 }, "ISO8859-1"));
+//                                    log.info("SP=" + bytesArrayToString(sendATCommandFrameSingleQuery("SP")) + "h");
 
-                                    log.debug("ST=" + bytesArrayToString(sendATCommandFrameSingleQuery("ST")) + "h");
-                                    bytes = sendATCommandFrameSingleQuery(
-                                            "ST" + new String(new byte[] { (byte) 0xea, (byte) 0x60 }, "ISO8859-1"));
-                                    log.debug("ST=" + bytesArrayToString(sendATCommandFrameSingleQuery("ST")) + "h");
+//                                    log.info("ST=" + bytesArrayToString(sendATCommandFrameSingleQuery("ST")) + "h");
+//                                    bytes = sendATCommandFrameSingleQuery(
+//                                            "ST" + new String(new byte[] { (byte) 0xea, (byte) 0x60 }, "ISO8859-1"));
+//                                    log.info("ST=" + bytesArrayToString(sendATCommandFrameSingleQuery("ST")) + "h");
 
-                                    log.debug("DP=" + bytesArrayToString(sendATCommandFrameSingleQuery("DP")) + "h");
-                                    bytes = sendATCommandFrameSingleQuery(
-                                            "DP" + new String(new byte[] { 3, (byte) 0xe8 }, "ISO8859-1"));
-                                    log.debug("DP=" + bytesArrayToString(sendATCommandFrameSingleQuery("DP")) + "h");
+//                                    log.info("DP=" + bytesArrayToString(sendATCommandFrameSingleQuery("DP")) + "h");
+//                                    bytes = sendATCommandFrameSingleQuery(
+//                                            "DP" + new String(new byte[] { 3, (byte) 0xe8 }, "ISO8859-1"));
+//                                    log.info("DP=" + bytesArrayToString(sendATCommandFrameSingleQuery("DP")) + "h");
 
                                 }
 
@@ -740,17 +766,28 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                     log.warn(ex);
                 }
 
-                // avoid overloading CPU and network
-                Thread.sleep(1000);
-
                 if (should_reconnect == false) {
-
-
-                }
+                    final XBeeFrame io_frame = serial_reader.getFrameWithApiIdAndAddress(0x82, remoteCommandAddress, 0);
+                    if (io_frame != null) {
+                    	// log.debug("frame got: " + io_frame.toString());
+                    	// io_frame.content[10] : nombre de samples
+//                    	log.debug("val: " + io_frame.content[10]);
+//                    	log.info("channel indicator: " + Tools.byteToBinaryString(io_frame.content[11]) + " " + Tools.byteToBinaryString(io_frame.content[12]));  
+                    	log.info("DIO: " + Tools.byteToBinaryString(io_frame.content[13]) + " " + Tools.byteToBinaryString(io_frame.content[14]));  
+                    	int analog0 = ((255 & io_frame.content[15]) << 8) + (255 & io_frame.content[16]);
+                    	int analog1 = ((255 & io_frame.content[17]) << 8) + (255 & io_frame.content[18]);
+                    	log.info("analog0/1: " + analog0 + " - " + analog1);
+                    } else {
+    	                // avoid overloading CPU and network
+    	                Thread.sleep(200);
+                    }
+                } else Thread.sleep(200);
 
             }
         } catch (final InterruptedException ex) {
             log.debug(ex);
-        }
+        } catch (UnsupportedEncodingException ex) {
+			log.error(ex);
+		}
     }
 }

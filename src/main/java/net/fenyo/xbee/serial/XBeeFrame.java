@@ -14,7 +14,7 @@ public class XBeeFrame extends XBeeData {
     }
 
     public String getAddress() throws UnsupportedEncodingException {
-        if (api_id != 0x80)
+        if (api_id != 0x80 && api_id != 0x82)
             return null;
         String address = "";
         for (final byte b : ArrayUtils.subarray(content, 0, 8))
@@ -62,6 +62,10 @@ public class XBeeFrame extends XBeeData {
         escaped_raw_content.add(0, (byte) 0x7e); // add start delimiter
 
         return ArrayUtils.toPrimitive(escaped_raw_content.toArray(new Byte[] {}));
+    }
+
+    public int getApiId() {
+        return api_id;
     }
 
     public int getId() {
