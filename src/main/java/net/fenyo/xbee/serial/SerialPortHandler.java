@@ -464,6 +464,8 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
     // threads: SerialPortHandler
     @Override
     public void run() {
+    	int cnt = 0;
+
         try {
             boolean should_reconnect = false;
             while (true) {
@@ -772,11 +774,27 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                     	// log.debug("frame got: " + io_frame.toString());
                     	// io_frame.content[10] : nombre de samples
 //                    	log.debug("val: " + io_frame.content[10]);
-//                    	log.info("channel indicator: " + Tools.byteToBinaryString(io_frame.content[11]) + " " + Tools.byteToBinaryString(io_frame.content[12]));  
+                    	log.info("channel indicator: " + Tools.byteToBinaryString(io_frame.content[11]) + " " + Tools.byteToBinaryString(io_frame.content[12]));  
                     	log.info("DIO: " + Tools.byteToBinaryString(io_frame.content[13]) + " " + Tools.byteToBinaryString(io_frame.content[14]));  
                     	int analog0 = ((255 & io_frame.content[15]) << 8) + (255 & io_frame.content[16]);
                     	int analog1 = ((255 & io_frame.content[17]) << 8) + (255 & io_frame.content[18]);
                     	log.info("analog0/1: " + analog0 + " - " + analog1);
+
+                    	cnt++;
+                    	if (cnt == 5) {
+                    		log.debug("set M0 + M1 UP");
+                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M0" + new String(new byte[] { (byte) 3, (byte) 0xff }), false);
+                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M1" + new String(new byte[] { (byte) 3, (byte) 0xff }), false);
+                    		log.debug("AFTER set M0 + M1 UP");
+                    	}
+                    	if (cnt == 10) {
+                    		log.debug("set M0 + M1 DOWN");
+                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M0" + new String(new byte[] { (byte) 0, (byte) 0 }), false);
+                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M1" + new String(new byte[] { (byte) 0, (byte) 0 }), false);
+                    		log.debug("AFTER set M0 + M1 DOWN");
+                    		cnt = 0;
+                    	}
+
                     } else {
     	                // avoid overloading CPU and network
     	                Thread.sleep(200);
@@ -787,6 +805,8 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
         } catch (final InterruptedException ex) {
             log.debug(ex);
         } catch (UnsupportedEncodingException ex) {
+			log.error(ex);
+		} catch (IOException ex) {
 			log.error(ex);
 		}
     }
