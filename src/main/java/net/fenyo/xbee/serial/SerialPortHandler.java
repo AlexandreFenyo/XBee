@@ -2,6 +2,8 @@ package net.fenyo.xbee.serial;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
+
 import org.apache.commons.lang3.*;
 import org.apache.commons.logging.*;
 import org.springframework.beans.factory.*;
@@ -28,6 +30,12 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
     private Socket socket = null;
 
     private int frame_id = 255; // synchronized by operation_lock
+
+    public boolean state_led0 = false;
+    public boolean state_led1 = false;
+    public boolean state_led2 = false;
+    public boolean state_led3 = false;
+    public boolean state_buzzer = false;
 
     public static String bytesArrayToString(final byte[] array) {
         if (array == null)
@@ -464,8 +472,15 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
     // threads: SerialPortHandler
     @Override
     public void run() {
-    	int cnt = 0;
+//    	int cnt = 0;
+    	long start_buzzer = System.currentTimeMillis();
+    	final long start_time = System.currentTimeMillis();
 
+    	boolean button[] = { true, true, true, true };
+    	boolean last_button[] = { true, true, true, true };
+    	int analog[] = { -1, -1 };
+    	int last_analog[] = { -1, -1 };
+    	
         try {
             boolean should_reconnect = false;
             while (true) {
@@ -473,6 +488,9 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                     synchronized (connection_lock) {
                         if (should_reconnect || serial_reader == null || serial_writer == null
                                 || serial_reader.getError() || serial_writer.getError()) {
+                        	// permettre la resynchro des trames sur le port série
+                        	Thread.sleep(500);
+
                             log.debug("avant connexion au coordinateur");
                             connectSerial();
                             log.debug("après connexion au coordinateur");
@@ -572,9 +590,6 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                 }
                                 log.info("node id: " + new String(bytes, "ISO8859-1"));
 
-
-                                
-                                
                                 bytes = sendATCommandFrameSingleQuery("SM");
                                 if (bytes == null) {
                                     log.warn("error");
@@ -584,10 +599,6 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                 final String module_sm = bytesArrayToString(bytes);
                                 
                                 log.info("module SM mode: " + module_sm);
-                                
-                                
-                                
-                                
                                 
                                 bytes = sendATCommandFrameSingleQuery("DH");
                                 if (bytes == null) {
@@ -769,37 +780,116 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                 }
 
                 if (should_reconnect == false) {
-                    final XBeeFrame io_frame = serial_reader.getFrameWithApiIdAndAddress(0x82, remoteCommandAddress, 0);
-                    if (io_frame != null) {
-                    	// log.debug("frame got: " + io_frame.toString());
-                    	// io_frame.content[10] : nombre de samples
-//                    	log.debug("val: " + io_frame.content[10]);
-                    	log.info("channel indicator: " + Tools.byteToBinaryString(io_frame.content[11]) + " " + Tools.byteToBinaryString(io_frame.content[12]));  
-                    	log.info("DIO: " + Tools.byteToBinaryString(io_frame.content[13]) + " " + Tools.byteToBinaryString(io_frame.content[14]));  
-                    	int analog0 = ((255 & io_frame.content[15]) << 8) + (255 & io_frame.content[16]);
-                    	int analog1 = ((255 & io_frame.content[17]) << 8) + (255 & io_frame.content[18]);
-                    	log.info("analog0/1: " + analog0 + " - " + analog1);
+                	if (System.currentTimeMillis() - start_buzzer > 500) state_buzzer = false;
+                	
+            		while (serial_reader.getFrameWithApiIdAndAddress(0x97, remoteCommandAddress, 0) != null);
 
-                    	cnt++;
-                    	if (cnt == 5) {
-                    		log.debug("set M0 + M1 UP");
-                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M0" + new String(new byte[] { (byte) 3, (byte) 0xff }), false);
-                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M1" + new String(new byte[] { (byte) 3, (byte) 0xff }), false);
-                    		log.debug("AFTER set M0 + M1 UP");
-                    	}
-                    	if (cnt == 10) {
-                    		log.debug("set M0 + M1 DOWN");
-                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M0" + new String(new byte[] { (byte) 0, (byte) 0 }), false);
-                    		sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M1" + new String(new byte[] { (byte) 0, (byte) 0 }), false);
-                    		log.debug("AFTER set M0 + M1 DOWN");
-                    		cnt = 0;
-                    	}
+                	XBeeFrame io_frame;
+                	do {
+                		io_frame = serial_reader.getFrameWithApiIdAndAddress(0x82, remoteCommandAddress, 50);
+                		if (io_frame != null) {
+                			// log.debug("frame got: " + io_frame.toString());
+                			// io_frame.content[10] : nombre de samples
+                			// log.debug("samples: XXXXXXXXXXXXXXXXXXXXXX: " + io_frame.content[10]);
+//                			log.info("channel indicator: " + Tools.byteToBinaryString(io_frame.content[11]) + " " + Tools.byteToBinaryString(io_frame.content[12]));  
+                			log.info("DIO: " + Tools.byteToBinaryString(io_frame.content[13]) + " " + Tools.byteToBinaryString(io_frame.content[14]));
+                			button[0] = ((io_frame.content[13] & 1) != 0);
+                			button[1] = ((io_frame.content[14] & (1 << 7)) != 0);
+                			button[2] = ((io_frame.content[14] & (1 << 2)) != 0);
+                			button[3] = ((io_frame.content[14] & (1 << 3)) != 0);
+                			if ((button[0] == true && last_button[0] == false) || (button[1] == true && last_button[1] == false) || (button[2] == true && last_button[2] == false) || (button[3] == true && last_button[3] == false)) {
+                		    	start_buzzer = System.currentTimeMillis();
+                		    	state_buzzer = true;
+                			}
+                			if (button[0] == true && last_button[0] == false) {
+                				final URL url = new URL("http://v.fenyo.net/newweb/cplus/swlights-rc.cgi");
+                				final URLConnection conn = url.openConnection();
+                				conn.connect();
+                				conn.getContent();
+                			}
+                			if (button[1] == true && last_button[1] == false) {
+                				final URL url = new URL("http://v.fenyo.net/newweb/cplus/swlights-rc-haut.cgi");
+                				final URLConnection conn = url.openConnection();
+                				conn.connect();
+                				conn.getContent();
+                			}
+                			if (button[3] == true && last_button[3] == false) {
+                				final Date date = new Date();
+                				final Calendar calendar = GregorianCalendar.getInstance();
+                				calendar.setTime(date); 
+                				final int h = calendar.get(Calendar.HOUR_OF_DAY);
+                				final URL url;
+                				if (h >= 14 || h < 4) url = new URL("http://v.fenyo.net/newweb/cplus/volets-salon-bas.cgi");
+                				else url = new URL("http://v.fenyo.net/newweb/cplus/volets-salon-haut.cgi");
+                				final URLConnection conn = url.openConnection();
+                				conn.connect();
+                				conn.getContent();
+                			}
+                			if (button[2] == true && last_button[2] == false) {
+                				final URL url;
+                				if (state_led2 == false) url = new URL("http://v.fenyo.net/newweb/cplus/tnt-marantz-fast.cgi");
+                				else url = new URL("http://v.fenyo.net/newweb/cplus/off-marantz-fast.cgi");
+                				final URLConnection conn = url.openConnection();
+                				conn.connect();
+                				conn.getContent();
+                			}
 
-                    } else {
-    	                // avoid overloading CPU and network
-    	                Thread.sleep(200);
-                    }
-                } else Thread.sleep(200);
+                			last_button[0] = button[0];
+                			last_button[1] = button[1];
+                			last_button[2] = button[2];
+                			last_button[3] = button[3];
+                			
+                			analog[0] = ((255 & io_frame.content[15]) << 8) + (255 & io_frame.content[16]);
+                			analog[1] = ((255 & io_frame.content[17]) << 8) + (255 & io_frame.content[18]);
+                			log.info("analog0/1: " + analog[0] + " - " + analog[1]);
+
+                			if (last_analog[0] != -1 && last_analog[1] != -1) {
+                				for (int i = 0; i < 2; i ++) {
+                					if (Math.abs(analog[i] - last_analog[i]) > 15 && analog[i] != 1023) {
+                						int v = analog[i];
+                						v = 1023 - v;
+                						v = v / 4;
+                						if (v < 1) v =  1;
+                						if (v > 254) v = 254;
+                						final URL url = new URL("http://v.fenyo.net/newweb/cplus/hue-set-bright-" + (i + 2) + ".cgi/" + v);
+                						// log.debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX " + i + " : " + analog[i]);
+                						final URLConnection conn = url.openConnection();
+                						conn.connect();
+                						conn.getContent();
+                					}
+                				}
+                			}
+
+                			if (analog[0] != 1023) last_analog[0] = analog[0];
+                			if (analog[1] != 1023) last_analog[1] = analog[1];
+                		}
+                	} while (io_frame != null);
+
+//                	cnt++;
+//                	if (cnt == 2) {
+//                		state_led0 = !state_led0;
+//                		state_led1 = !state_led1;
+//                		state_led2 = !state_led2;
+//                		state_led3 = !state_led3;
+//                		state_buzzer = !state_buzzer;
+//                		cnt = 0;
+//                	}
+
+                	long wait = 35;
+                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "D6" + new String(new byte[] { (byte) (state_buzzer ? 5 : 4) }), false);
+                	Thread.sleep(wait);
+                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "D4" + new String(new byte[] { (byte) (state_led0 ? 5 : 4) }), false);
+                	Thread.sleep(wait);
+                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "D5" + new String(new byte[] { (byte) (state_led3 ? 5 : 4) }), false);
+                	Thread.sleep(wait);
+                	final boolean _state_led1 = state_led1;
+                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M0" + new String(new byte[] { (byte) (_state_led1 ? 3 : 0), (byte) (_state_led1 ? 0xff : 0)}), false);
+                	Thread.sleep(wait);
+                	final boolean _state_led2 = state_led2;
+                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M1" + new String(new byte[] { (byte) (_state_led2 ? 3 : 0), (byte) (_state_led2 ? 0xff : 0)}), false);
+                	Thread.sleep(wait);
+
+                }
 
             }
         } catch (final InterruptedException ex) {

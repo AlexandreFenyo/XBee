@@ -79,4 +79,76 @@ public class WebController {
         mav.addObject("statusString", serialPortHandler.checkAT());
         return mav;
     }
+
+    @RequestMapping("/setOnLED0")
+    public ModelAndView setOnLED0() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led0 = true;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
+
+    @RequestMapping("/setOnLED1")
+    public ModelAndView setOnLED1() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led1 = true;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
+
+    @RequestMapping("/setOnLED2")
+    public ModelAndView setOnLED2() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led2 = true;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
+
+    @RequestMapping("/setOnLED3")
+    public ModelAndView setOnLED3() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led3 = true;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
+
+    @RequestMapping("/setOffLED0")
+    public ModelAndView setOffLED0() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led0 = false;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
+
+    @RequestMapping("/setOffLED1")
+    public ModelAndView setOffLED1() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led1 = false;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
+
+    @RequestMapping("/setOffLED2")
+    public ModelAndView setOffLED2() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led2 = false;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
+
+    @RequestMapping("/setOffLED3")
+    public ModelAndView setOffLED3() throws IOException, InterruptedException {
+        ModelAndView mav = new ModelAndView();
+        serialPortHandler.state_led3 = false;
+        mav.addObject("statusString", "success");
+        mav.setViewName("display-status");
+        return mav;
+    }
 }
