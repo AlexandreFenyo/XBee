@@ -535,7 +535,9 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                                     else
                                         log.warn("bad pan id " + bytesArrayToString(bytes) + "(should be afae)");
 
-                                    log.info("trying to set pan id to afafh");
+System.exit(1);
+
+                                    log.info("trying to set pan id to afaeh");
                                     bytes = sendATCommandFrameSingleQuery(
                                             "ID" + new String(new byte[] { (byte) 0xaf, (byte) 0xae }));
                                     if (bytes == null || bytes.length > 0) {
@@ -813,6 +815,8 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                 				conn.connect();
                 				conn.getContent();
                 			}
+
+                			/* A REMETTRE
                 			if (button[3] == true && last_button[3] == false) {
                 				final Date date = new Date();
                 				final Calendar calendar = GregorianCalendar.getInstance();
@@ -833,6 +837,7 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
                 				conn.connect();
                 				conn.getContent();
                 			}
+                			*/
 
                 			last_button[0] = button[0];
                 			last_button[1] = button[1];
@@ -875,20 +880,22 @@ public class SerialPortHandler implements InitializingBean, DisposableBean, Runn
 //                		cnt = 0;
 //                	}
 
+                	// apparemment, quand on envoie plusieurs commandes dans la foulée, la première passe bien, et plus on s'éloigne de la première moins ça risque de passer => solution : cette pause de 35 ms entre 2 commandes
                 	long wait = 35;
-                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "D6" + new String(new byte[] { (byte) (state_buzzer ? 5 : 4) }), false);
+                	final long dst_addr_high = Long.decode("0x" + remoteCommandAddress.substring(0, 8));
+                	final long dst_addr_low = Long.decode("0x" + remoteCommandAddress.substring(8));
+                	sendRemoteATCommandFrameSingleQueryAck(dst_addr_high, dst_addr_low, "D6" + new String(new byte[] { (byte) (state_buzzer ? 5 : 4) }), false);
                 	Thread.sleep(wait);
-                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "D4" + new String(new byte[] { (byte) (state_led0 ? 5 : 4) }), false);
+                	sendRemoteATCommandFrameSingleQueryAck(dst_addr_high, dst_addr_low, "D4" + new String(new byte[] { (byte) (state_led0 ? 5 : 4) }), false);
                 	Thread.sleep(wait);
-                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "D5" + new String(new byte[] { (byte) (state_led3 ? 5 : 4) }), false);
+                	sendRemoteATCommandFrameSingleQueryAck(dst_addr_high, dst_addr_low, "D5" + new String(new byte[] { (byte) (state_led3 ? 5 : 4) }), false);
                 	Thread.sleep(wait);
                 	final boolean _state_led1 = state_led1;
-                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M0" + new String(new byte[] { (byte) (_state_led1 ? 3 : 0), (byte) (_state_led1 ? 0xff : 0)}), false);
+                	sendRemoteATCommandFrameSingleQueryAck(dst_addr_high, dst_addr_low, "M0" + new String(new byte[] { (byte) (_state_led1 ? 3 : 0), (byte) (_state_led1 ? 0xff : 0)}), false);
                 	Thread.sleep(wait);
                 	final boolean _state_led2 = state_led2;
-                	sendRemoteATCommandFrameSingleQueryAck(0x13a200, 0x409b7a9c, "M1" + new String(new byte[] { (byte) (_state_led2 ? 3 : 0), (byte) (_state_led2 ? 0xff : 0)}), false);
+                	sendRemoteATCommandFrameSingleQueryAck(dst_addr_high, dst_addr_low, "M1" + new String(new byte[] { (byte) (_state_led2 ? 3 : 0), (byte) (_state_led2 ? 0xff : 0)}), false);
                 	Thread.sleep(wait);
-
                 }
 
             }
