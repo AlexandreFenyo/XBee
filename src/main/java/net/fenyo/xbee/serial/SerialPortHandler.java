@@ -816,7 +816,6 @@ System.exit(1);
                 				conn.getContent();
                 			}
 
-                			/* A REMETTRE
                 			if (button[3] == true && last_button[3] == false) {
                 				final Date date = new Date();
                 				final Calendar calendar = GregorianCalendar.getInstance();
@@ -837,7 +836,6 @@ System.exit(1);
                 				conn.connect();
                 				conn.getContent();
                 			}
-                			*/
 
                 			last_button[0] = button[0];
                 			last_button[1] = button[1];
