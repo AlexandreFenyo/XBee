@@ -6,7 +6,7 @@
     <appender name="consoleAppender" class="org.apache.log4j.ConsoleAppender">
         <layout class="org.apache.log4j.PatternLayout">
             <!-- for debugging -->
-            <param name="ConversionPattern" value="%d [%t] %p - %F:%L - %m%n" />
+            <param name="ConversionPattern" value="NEWRC %d [%t] %p - %F:%L - %m%n" />
             <!-- for fast debugging : no line number -->
             <!-- <param name="ConversionPattern" value="%d [%t] %p - %F - 
                 %m%n"/> -->
