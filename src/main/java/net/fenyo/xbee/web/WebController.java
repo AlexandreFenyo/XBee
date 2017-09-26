@@ -1,6 +1,10 @@
 package net.fenyo.xbee.web;
 
 import java.io.*;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
 import net.fenyo.xbee.serial.*;
 import org.apache.commons.logging.*;
 import org.springframework.beans.factory.annotation.*;
@@ -21,6 +25,26 @@ public class WebController {
         ModelAndView mav = new ModelAndView();
         mav.addObject("statusString", status_string);
         mav.setViewName("say-hello");
+        return mav;
+    }
+
+    @RequestMapping("/tst")
+    public ModelAndView tst(HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView();
+        mav.setViewName("say-hello");
+        
+        Cookie myJsonCookie = new Cookie("cookiXeName", "{\"segmentation\":\"6\"}");
+        Cookie myJsonCookie2 = new Cookie("cookXieName2", "{\"name\":\"someName\"}");
+        
+        log.debug("xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+//        myJsonCookie.setHttpOnly(true);
+//        myJsonCookie.setSecure(true);
+        myJsonCookie.setPath("/");
+//        myJsonCookie.setMaxAge(60*60);
+//        response.addCookie(myJsonCookie);
+//        response.addCookie(myJsonCookie2);
+        response.addHeader("X-Cookie2", "{\"nom\":\"valeur\"");
+        response.addIntHeader("toto", 123);
         return mav;
     }
 
