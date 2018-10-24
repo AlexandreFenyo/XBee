@@ -1,4 +1,8 @@
 
+pour compiler sur FreeBSD, si probleme de SSL:
+mvn -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2  ...
+
+
 threads:
   tomcat
   SerialPortHandler
